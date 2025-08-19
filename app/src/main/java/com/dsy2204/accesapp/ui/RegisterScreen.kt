@@ -36,6 +36,7 @@ import com.dsy2204.accesapp.auth.AuthViewModel
 import com.dsy2204.accesapp.auth.User
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("DEPRECATION")
 @Composable
 fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
     val snackbar = remember { SnackbarHostState() }
@@ -58,14 +59,8 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
             TopAppBar(
                 title = { Text("Registro") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.semantics { contentDescription = "Volver" }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
-                        )
+                    IconButton(onClick = onBack, modifier = Modifier.semantics { contentDescription = "Volver" }) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 }
             )
@@ -79,14 +74,13 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Text("Usuarios registrados: ${auth.users.size}/${AuthViewModel.MAX_USERS}")
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Nombre") },
                 singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Campo nombre" }
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Campo nombre" }
             )
             OutlinedTextField(
                 value = email,
@@ -94,9 +88,7 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                 label = { Text("Correo electrónico") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Campo correo electrónico" }
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Campo correo electrónico" }
             )
             OutlinedTextField(
                 value = password,
@@ -104,9 +96,7 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                 label = { Text("Contraseña") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Campo contraseña" }
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Campo contraseña" }
             )
             OutlinedTextField(
                 value = confirm,
@@ -114,9 +104,7 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                 label = { Text("Confirmar contraseña") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Campo confirmar contraseña" }
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Campo confirmar contraseña" }
             )
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { role = "Usuario" }) {
@@ -142,24 +130,16 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                 )
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     languages.forEach {
-                        DropdownMenuItem(
-                            text = { Text(it) },
-                            onClick = {
-                                language = it
-                                expanded = false
-                            }
-                        )
+                        DropdownMenuItem(text = { Text(it) }, onClick = { language = it; expanded = false })
                     }
                 }
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Checkbox(checked = accepted, onCheckedChange = { accepted = it })
                 Text("Acepto términos y condiciones")
             }
             Button(
+                enabled = auth.users.size < AuthViewModel.MAX_USERS,
                 onClick = {
                     if (password == confirm && accepted) {
                         val ok = auth.register(
@@ -177,16 +157,11 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                         auth.lastMessage.value = "Verifica contraseñas y aceptación de términos."
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Botón crear cuenta" }
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Botón crear cuenta" }
             ) {
-                Text("Crear cuenta")
+                Text(if (auth.users.size < AuthViewModel.MAX_USERS) "Crear cuenta" else "Capacidad completa")
             }
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth().weight(1f, false)
-            ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().weight(1f, false)) {
                 items(auth.users) { u ->
                     Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Text(u.name)

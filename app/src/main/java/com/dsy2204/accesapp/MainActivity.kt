@@ -14,9 +14,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val navController = rememberNavController()
-            val authViewModel: AuthViewModel = viewModel()
+            val auth: AuthViewModel = viewModel()
             MaterialTheme {
-                AppNavHost(navController = navController, auth = authViewModel)
+                AppNavHost(navController = navController, auth = auth)
             }
         }
     }

@@ -4,18 +4,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -30,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -38,6 +36,7 @@ import com.dsy2204.accesapp.auth.AuthViewModel
 import com.dsy2204.accesapp.auth.User
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("DEPRECATION")
 @Composable
 fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewModel) {
     val snackbar = remember { SnackbarHostState() }
@@ -118,10 +117,7 @@ fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewMod
                     languages.forEach {
                         DropdownMenuItem(
                             text = { Text(it) },
-                            onClick = {
-                                language = it
-                                expanded = false
-                            }
+                            onClick = { language = it; expanded = false }
                         )
                     }
                 }
@@ -132,30 +128,25 @@ fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewMod
                     .fillMaxWidth()
                     .semantics { contentDescription = "Botón ingresar" }
             ) {
-                Icon(Icons.Default.Login, contentDescription = null)
+                Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Ingresar")
             }
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                ClickableText(
-                    text = AnnotatedString("Registrarme"),
-                    onClick = { onRegister() },
-                    modifier = Modifier.semantics { contentDescription = "Ir a registrarme" }
-                )
-                ClickableText(
-                    text = AnnotatedString("Olvidé mi contraseña"),
-                    onClick = { onRecover() },
-                    modifier = Modifier.semantics { contentDescription = "Ir a recuperar contraseña" }
-                )
+                Text("Registrarme", modifier = Modifier.semantics { contentDescription = "Ir a registrarme" }.clickable { onRegister() })
+                Text("Olvidé mi contraseña", modifier = Modifier.semantics { contentDescription = "Ir a recuperar contraseña" }.clickable { onRecover() })
             }
-            Divider()
+            HorizontalDivider()
             Text("Usuarios registrados")
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxWidth().weight(1f, false)
             ) {
                 items(auth.users) { u: User ->
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(u.name)
                         Text(u.email)
                     }

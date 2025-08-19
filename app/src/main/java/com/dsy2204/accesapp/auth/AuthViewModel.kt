@@ -5,11 +5,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
 class AuthViewModel : ViewModel() {
+    companion object {
+        const val MAX_USERS = 5
+    }
+
     val users = mutableStateListOf<User>()
     val lastMessage = mutableStateOf<String?>(null)
+    val currentUser = mutableStateOf<User?>(null)
 
     fun register(user: User): Boolean {
-        if (users.size >= 5) {
+        if (users.size >= MAX_USERS) {
             lastMessage.value = "Capacidad completa: 5 usuarios."
             return false
         }
@@ -23,9 +28,10 @@ class AuthViewModel : ViewModel() {
     }
 
     fun login(email: String, password: String): Boolean {
-        val ok = users.any { it.email.equals(email, true) && it.password == password }
-        lastMessage.value = if (ok) "Inicio de sesión correcto." else "Credenciales inválidas."
-        return ok
+        val found = users.firstOrNull { it.email.equals(email, true) && it.password == password }
+        currentUser.value = found
+        lastMessage.value = if (found != null) "Inicio de sesión correcto." else "Credenciales inválidas."
+        return found != null
     }
 
     fun recover(email: String): Boolean {
