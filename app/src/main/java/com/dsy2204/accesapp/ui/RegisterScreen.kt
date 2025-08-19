@@ -4,13 +4,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenu
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
@@ -28,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -58,8 +58,14 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
             TopAppBar(
                 title = { Text("Registro") },
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.semantics { contentDescription = "Volver" }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.semantics { contentDescription = "Volver" }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
                     }
                 }
             )
@@ -134,9 +140,9 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                         .fillMaxWidth()
                         .semantics { contentDescription = "Selector de idioma" }
                 )
-                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     languages.forEach {
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(it) },
                             onClick = {
                                 language = it
@@ -156,7 +162,7 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
             Button(
                 onClick = {
                     if (password == confirm && accepted) {
-                        auth.register(
+                        val ok = auth.register(
                             User(
                                 name = name.trim(),
                                 email = email.trim(),
@@ -166,7 +172,7 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                                 acceptedTerms = accepted
                             )
                         )
-                        if (auth.lastMessage.value == "Registro exitoso.") onBack()
+                        if (ok) onBack()
                     } else {
                         auth.lastMessage.value = "Verifica contraseñas y aceptación de términos."
                     }
@@ -175,19 +181,14 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                     .fillMaxWidth()
                     .semantics { contentDescription = "Botón crear cuenta" }
             ) {
-                Icon(Icons.Default.Check, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
                 Text("Crear cuenta")
             }
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxWidth().weight(1f, false)
             ) {
-                items(auth.users) { u: User ->
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                items(auth.users) { u ->
+                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Text(u.name)
                         Text(u.email)
                     }

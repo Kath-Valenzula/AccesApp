@@ -2,10 +2,12 @@ package com.dsy2204.accesapp.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -20,11 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.dsy2204.accesapp.auth.AuthViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecoverPasswordScreen(onBack: () -> Unit, auth: AuthViewModel) {
     val snackbar = remember { SnackbarHostState() }
@@ -40,8 +42,14 @@ fun RecoverPasswordScreen(onBack: () -> Unit, auth: AuthViewModel) {
             TopAppBar(
                 title = { Text("Recuperar contraseña") },
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.semantics { contentDescription = "Volver" }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.semantics { contentDescription = "Volver" }
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = null
+                        )
                     }
                 }
             )
@@ -66,11 +74,17 @@ fun RecoverPasswordScreen(onBack: () -> Unit, auth: AuthViewModel) {
                     .semantics { contentDescription = "Campo correo electrónico" }
             )
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { method = "Correo" }) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { method = "Correo" }
+                ) {
                     RadioButton(selected = method == "Correo", onClick = { method = "Correo" })
                     Text("Correo")
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { method = "SMS" }) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { method = "SMS" }
+                ) {
                     RadioButton(selected = method == "SMS", onClick = { method = "SMS" })
                     Text("SMS")
                 }
@@ -81,7 +95,10 @@ fun RecoverPasswordScreen(onBack: () -> Unit, auth: AuthViewModel) {
                     .fillMaxWidth()
                     .semantics { contentDescription = "Botón enviar instrucciones" }
             ) {
-                Icon(Icons.Default.Send, contentDescription = null)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = null
+                )
                 Spacer(Modifier.width(8.dp))
                 Text("Enviar instrucciones")
             }
