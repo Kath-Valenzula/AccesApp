@@ -1,0 +1,41 @@
+package com.dsy2204.accesapp.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.dsy2204.accesapp.auth.AuthViewModel
+import com.dsy2204.accesapp.ui.LoginScreen
+import com.dsy2204.accesapp.ui.RecoverPasswordScreen
+import com.dsy2204.accesapp.ui.RegisterScreen
+
+object Routes {
+    const val Login = "login"
+    const val Register = "register"
+    const val Recover = "recover"
+}
+
+@Composable
+fun AppNavHost(navController: NavHostController, auth: AuthViewModel) {
+    NavHost(navController = navController, startDestination = Routes.Login) {
+        composable(Routes.Login) {
+            LoginScreen(
+                onRegister = { navController.navigate(Routes.Register) },
+                onRecover = { navController.navigate(Routes.Recover) },
+                auth = auth
+            )
+        }
+        composable(Routes.Register) {
+            RegisterScreen(
+                onBack = { navController.popBackStack() },
+                auth = auth
+            )
+        }
+        composable(Routes.Recover) {
+            RecoverPasswordScreen(
+                onBack = { navController.popBackStack() },
+                auth = auth
+            )
+        }
+    }
+}
