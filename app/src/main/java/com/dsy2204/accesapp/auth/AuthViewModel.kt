@@ -13,6 +13,8 @@ class AuthViewModel : ViewModel() {
     val lastMessage = mutableStateOf<String?>(null)
     val currentUser = mutableStateOf<User?>(null)
 
+    val notes = mutableStateListOf<String>()
+
     fun register(user: User): Boolean {
         if (users.size >= MAX_USERS) {
             lastMessage.value = "Capacidad completa: 5 usuarios."
@@ -38,5 +40,16 @@ class AuthViewModel : ViewModel() {
         val ok = users.any { it.email.equals(email, true) }
         lastMessage.value = if (ok) "Enviamos instrucciones a tu correo." else "Correo no encontrado."
         return ok
+    }
+
+    fun saveNote(text: String) {
+        if (text.isNotBlank()) {
+            notes.add(0, text)
+            lastMessage.value = "Nota guardada."
+        }
+    }
+
+    fun deleteNote(index: Int) {
+        if (index in notes.indices) notes.removeAt(index)
     }
 }
