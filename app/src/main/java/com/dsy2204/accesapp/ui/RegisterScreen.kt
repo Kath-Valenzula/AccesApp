@@ -27,6 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -40,6 +41,7 @@ import com.dsy2204.accesapp.auth.User
 @Composable
 fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
     val snackbar = remember { SnackbarHostState() }
+    val focus = LocalFocusManager.current
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -49,6 +51,8 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
     var expanded by remember { mutableStateOf(false) }
     val languages = listOf("Español", "English")
     var language by remember { mutableStateOf(languages.first()) }
+    val limitFree = auth.users.size < AuthViewModel.MAX_USERS
+    val formValid = limitFree && name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && confirm.isNotBlank() && accepted && password == confirm
 
     LaunchedEffect(auth.lastMessage.value) {
         auth.lastMessage.value?.let { snackbar.showSnackbar(it) }
@@ -139,27 +143,24 @@ fun RegisterScreen(onBack: () -> Unit, auth: AuthViewModel) {
                 Text("Acepto términos y condiciones")
             }
             Button(
-                enabled = auth.users.size < AuthViewModel.MAX_USERS,
+                enabled = formValid,
                 onClick = {
-                    if (password == confirm && accepted) {
-                        val ok = auth.register(
-                            User(
-                                name = name.trim(),
-                                email = email.trim(),
-                                password = password,
-                                role = role,
-                                language = language,
-                                acceptedTerms = accepted
-                            )
+                    focus.clearFocus()
+                    val ok = auth.register(
+                        User(
+                            name = name.trim(),
+                            email = email.trim(),
+                            password = password,
+                            role = role,
+                            language = language,
+                            acceptedTerms = accepted
                         )
-                        if (ok) onBack()
-                    } else {
-                        auth.lastMessage.value = "Verifica contraseñas y aceptación de términos."
-                    }
+                    )
+                    if (ok) onBack()
                 },
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Botón crear cuenta" }
             ) {
-                Text(if (auth.users.size < AuthViewModel.MAX_USERS) "Crear cuenta" else "Capacidad completa")
+                Text(if (limitFree) "Crear cuenta" else "Capacidad completa")
             }
             LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().weight(1f, false)) {
                 items(auth.users) { u ->

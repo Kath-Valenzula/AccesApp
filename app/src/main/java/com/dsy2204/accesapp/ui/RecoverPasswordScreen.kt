@@ -20,6 +20,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -30,8 +31,10 @@ import com.dsy2204.accesapp.auth.AuthViewModel
 @Composable
 fun RecoverPasswordScreen(onBack: () -> Unit, auth: AuthViewModel) {
     val snackbar = remember { SnackbarHostState() }
+    val focus = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
     var method by remember { mutableStateOf("Correo") }
+    val canSend = email.isNotBlank()
 
     LaunchedEffect(auth.lastMessage.value) {
         auth.lastMessage.value?.let { snackbar.showSnackbar(it) }
@@ -42,14 +45,8 @@ fun RecoverPasswordScreen(onBack: () -> Unit, auth: AuthViewModel) {
             TopAppBar(
                 title = { Text("Recuperar contraseña") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.semantics { contentDescription = "Volver" }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null
-                        )
+                    IconButton(onClick = onBack, modifier = Modifier.semantics { contentDescription = "Volver" }) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 }
             )
@@ -74,31 +71,23 @@ fun RecoverPasswordScreen(onBack: () -> Unit, auth: AuthViewModel) {
                     .semantics { contentDescription = "Campo correo electrónico" }
             )
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { method = "Correo" }
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { method = "Correo" }) {
                     RadioButton(selected = method == "Correo", onClick = { method = "Correo" })
                     Text("Correo")
                 }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { method = "SMS" }
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { method = "SMS" }) {
                     RadioButton(selected = method == "SMS", onClick = { method = "SMS" })
                     Text("SMS")
                 }
             }
             Button(
-                onClick = { auth.recover(email.trim()) },
+                enabled = canSend,
+                onClick = { focus.clearFocus(); auth.recover(email.trim()) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { contentDescription = "Botón enviar instrucciones" }
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = null
-                )
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Enviar instrucciones")
             }

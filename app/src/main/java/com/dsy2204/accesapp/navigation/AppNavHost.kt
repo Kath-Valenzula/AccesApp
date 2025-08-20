@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.dsy2204.accesapp.auth.AuthViewModel
+import com.dsy2204.accesapp.ui.AssistScreen
 import com.dsy2204.accesapp.ui.LoginScreen
 import com.dsy2204.accesapp.ui.RecoverPasswordScreen
 import com.dsy2204.accesapp.ui.RegisterScreen
@@ -13,6 +14,7 @@ object Routes {
     const val Login = "login"
     const val Register = "register"
     const val Recover = "recover"
+    const val Assist = "assist"
 }
 
 @Composable
@@ -22,20 +24,18 @@ fun AppNavHost(navController: NavHostController, auth: AuthViewModel) {
             LoginScreen(
                 onRegister = { navController.navigate(Routes.Register) },
                 onRecover = { navController.navigate(Routes.Recover) },
+                onSuccess = { navController.navigate(Routes.Assist) },
                 auth = auth
             )
         }
         composable(Routes.Register) {
-            RegisterScreen(
-                onBack = { navController.popBackStack() },
-                auth = auth
-            )
+            RegisterScreen(onBack = { navController.popBackStack() }, auth = auth)
         }
         composable(Routes.Recover) {
-            RecoverPasswordScreen(
-                onBack = { navController.popBackStack() },
-                auth = auth
-            )
+            RecoverPasswordScreen(onBack = { navController.popBackStack() }, auth = auth)
+        }
+        composable(Routes.Assist) {
+            AssistScreen(onBack = { navController.popBackStack() })
         }
     }
 }

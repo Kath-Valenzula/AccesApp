@@ -27,6 +27,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,8 +39,9 @@ import com.dsy2204.accesapp.auth.User
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("DEPRECATION")
 @Composable
-fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewModel) {
+fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, onSuccess: () -> Unit, auth: AuthViewModel) {
     val snackbar = remember { SnackbarHostState() }
+    val focus = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
@@ -47,6 +49,7 @@ fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewMod
     var expanded by remember { mutableStateOf(false) }
     val languages = listOf("Español", "English")
     var language by remember { mutableStateOf(languages.first()) }
+    val loginEnabled = email.isNotBlank() && password.isNotBlank()
 
     LaunchedEffect(auth.lastMessage.value) {
         auth.lastMessage.value?.let { snackbar.showSnackbar(it) }
@@ -84,10 +87,7 @@ fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewMod
                     .fillMaxWidth()
                     .semantics { contentDescription = "Campo contraseña" }
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
                 Text("Recordarme", modifier = Modifier.semantics { contentDescription = "Recordarme" })
             }
@@ -115,15 +115,16 @@ fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewMod
                 )
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     languages.forEach {
-                        DropdownMenuItem(
-                            text = { Text(it) },
-                            onClick = { language = it; expanded = false }
-                        )
+                        DropdownMenuItem(text = { Text(it) }, onClick = { language = it; expanded = false })
                     }
                 }
             }
             Button(
-                onClick = { auth.login(email.trim(), password) },
+                enabled = loginEnabled,
+                onClick = {
+                    focus.clearFocus()
+                    if (auth.login(email.trim(), password)) onSuccess()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { contentDescription = "Botón ingresar" }
@@ -138,15 +139,9 @@ fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, auth: AuthViewMod
             }
             HorizontalDivider()
             Text("Usuarios registrados")
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth().weight(1f, false)
-            ) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().weight(1f, false)) {
                 items(auth.users) { u: User ->
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Text(u.name)
                         Text(u.email)
                     }
