@@ -1,64 +1,40 @@
 package com.dsy2204.accesapp.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.dsy2204.accesapp.a11y.AccessibleMessage
+import com.dsy2204.accesapp.a11y.ScreenHeading
+import com.dsy2204.accesapp.a11y.a11yButton
 import com.dsy2204.accesapp.auth.AuthViewModel
-import com.dsy2204.accesapp.auth.User
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("DEPRECATION")
 @Composable
 fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, onSuccess: () -> Unit, auth: AuthViewModel) {
-    val snackbar = remember { SnackbarHostState() }
-    val focus = LocalFocusManager.current
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var pass by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
-    var role by remember { mutableStateOf("Usuario") }
-    var expanded by remember { mutableStateOf(false) }
-    val languages = listOf("Español", "English")
-    var language by remember { mutableStateOf(languages.first()) }
-    val loginEnabled = email.isNotBlank() && password.isNotBlank()
+    val emailFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { emailFocus.requestFocus() }
 
-    LaunchedEffect(auth.lastMessage.value) {
-        auth.lastMessage.value?.let { snackbar.showSnackbar(it) }
-    }
-
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Iniciar sesión") }) },
-        snackbarHost = { SnackbarHost(hostState = snackbar) }
-    ) { padding ->
+    Scaffold { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -66,83 +42,45 @@ fun LoginScreen(onRegister: () -> Unit, onRecover: () -> Unit, onSuccess: () -> 
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedTextField(
+            AccessibleMessage(auth.lastMessage.value)
+            ScreenHeading("Iniciar sesión")
+            TextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Correo electrónico") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Campo correo electrónico" }
+                modifier = Modifier.fillMaxWidth().focusRequester(emailFocus).semantics { contentDescription = "Campo correo electrónico" }
             )
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+            TextField(
+                value = pass,
+                onValueChange = { pass = it },
                 label = { Text("Contraseña") },
-                singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Campo contraseña" }
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Campo contraseña" }
             )
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Checkbox(checked = rememberMe, onCheckedChange = { rememberMe = it })
-                Text("Recordarme", modifier = Modifier.semantics { contentDescription = "Recordarme" })
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { role = "Usuario" }) {
-                    RadioButton(selected = role == "Usuario", onClick = { role = "Usuario" })
-                    Text("Usuario")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { role = "Tutor" }) {
-                    RadioButton(selected = role == "Tutor", onClick = { role = "Tutor" })
-                    Text("Tutor")
-                }
-            }
-            ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-                TextField(
-                    value = language,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Idioma") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                        .semantics { contentDescription = "Selector de idioma" }
-                )
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    languages.forEach {
-                        DropdownMenuItem(text = { Text(it) }, onClick = { language = it; expanded = false })
-                    }
-                }
+                Text("Recordarme")
             }
             Button(
-                enabled = loginEnabled,
-                onClick = {
-                    focus.clearFocus()
-                    if (auth.login(email.trim(), password)) onSuccess()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "Botón ingresar" }
-            ) {
-                Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text("Ingresar")
+                onClick = { if (auth.login(email, pass)) onSuccess() },
+                enabled = email.isNotBlank() && pass.isNotBlank(),
+                modifier = Modifier.fillMaxWidth().a11yButton().semantics { contentDescription = "Ingresar" }
+            ) { Text("Ingresar") }
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = onRegister, modifier = Modifier.weight(1f).a11yButton()) { Text("Registrarme") }
+                TextButton(onClick = onRecover, modifier = Modifier.weight(1f).a11yButton()) { Text("Olvidé mi contraseña") }
             }
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text("Registrarme", modifier = Modifier.semantics { contentDescription = "Ir a registrarme" }.clickable { onRegister() })
-                Text("Olvidé mi contraseña", modifier = Modifier.semantics { contentDescription = "Ir a recuperar contraseña" }.clickable { onRecover() })
-            }
-            HorizontalDivider()
+
             Text("Usuarios registrados")
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().weight(1f, false)) {
-                items(auth.users) { u: User ->
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text(u.name)
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth().weight(1f, false).semantics { contentDescription = "Lista de usuarios registrados" }
+            ) {
+                items(auth.users) { u ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        Text(u.name, modifier = Modifier.weight(1f))
+                        Text(u.role)
                         Text(u.email)
                     }
                 }

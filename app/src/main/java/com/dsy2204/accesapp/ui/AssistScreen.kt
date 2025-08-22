@@ -13,39 +13,15 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -62,6 +38,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.dsy2204.accesapp.a11y.AccessibleMessage
+import com.dsy2204.accesapp.a11y.a11yButton
 import com.dsy2204.accesapp.auth.AuthViewModel
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -132,9 +110,8 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
             speechRecognizer?.startListening(recognizerIntent)
         }
     }
-
     DisposableEffect(speechRecognizer) {
-        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+        speechRecognizer?.setRecognitionListener(object : android.speech.RecognitionListener {
             override fun onResults(results: android.os.Bundle?) {
                 val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
                 if (list.isNotEmpty()) input = if (input.isBlank()) list[0] else "$input ${list[0]}"
@@ -143,11 +120,11 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
                 val list = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
                 if (list.isNotEmpty()) input = if (input.isBlank()) list[0] else "$input ${list[0]}"
             }
+            override fun onError(error: Int) { isListening = false }
             override fun onReadyForSpeech(params: android.os.Bundle?) {}
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {}
-            override fun onError(error: Int) { isListening = false }
             override fun onBeginningOfSpeech() {}
             override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
         })
@@ -179,8 +156,11 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            AccessibleMessage(auth.lastMessage.value)
+
             Text("Tamaño de texto: ${fontSize.toInt()}sp")
             Slider(value = fontSize, valueRange = 16f..32f, onValueChange = { fontSize = it })
+
             OutlinedTextField(
                 value = input,
                 onValueChange = { input = it },
@@ -205,11 +185,11 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
                         }
                     },
                     enabled = ttsReady && sentences.isNotEmpty(),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Leer" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Leer en voz alta" }
                 ) { Text("Leer") }
                 Button(
                     onClick = { tts.stop() },
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Pausar" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Pausar" }
                 ) { Text("Pausar") }
                 Button(
                     onClick = {
@@ -222,7 +202,7 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
                         }
                     },
                     enabled = ttsReady && sentences.isNotEmpty(),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Reanudar" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Reanudar lectura" }
                 ) { Text("Reanudar") }
             }
 
@@ -230,29 +210,25 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
                 Button(
                     onClick = {
                         val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
-                        if (granted) {
-                            isListening = true
-                            speechRecognizer?.startListening(recognizerIntent)
-                        } else {
-                            askMicPermission.launch(Manifest.permission.RECORD_AUDIO)
-                        }
+                        if (granted) { isListening = true; speechRecognizer?.startListening(recognizerIntent) }
+                        else { askMicPermission.launch(Manifest.permission.RECORD_AUDIO) }
                     },
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Iniciar dictado continuo" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Iniciar dictado continuo" }
                 ) { Text(if (isListening) "Escuchando..." else "Dictado continuo") }
                 Button(
                     onClick = { isListening = false; speechRecognizer?.stopListening() },
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Detener dictado" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Detener dictado" }
                 ) { Text("Detener dictado") }
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = { openTxt.launch(arrayOf("text/*")) },
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Cargar archivo de texto" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Cargar archivo de texto" }
                 ) { Text("Cargar .txt") }
                 Button(
                     onClick = { input = "" },
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Limpiar texto" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Limpiar texto" }
                 ) { Text("Limpiar") }
             }
 
@@ -260,32 +236,31 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
                 Button(
                     onClick = { clipboard.setText(AnnotatedString(input)); haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress) },
                     enabled = input.isNotBlank(),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Copiar" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Copiar al portapapeles" }
                 ) { Text("Copiar") }
                 Button(
                     onClick = {
                         val paste = clipboard.getText()?.text.orEmpty()
                         if (paste.isNotBlank()) input = if (input.isBlank()) paste else "$input $paste"
                     },
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Pegar" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Pegar desde portapapeles" }
                 ) { Text("Pegar") }
                 Button(
                     onClick = {
                         if (input.isNotBlank()) {
                             val send = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, input)
+                                type = "text/plain"; putExtra(Intent.EXTRA_TEXT, input)
                             }
                             context.startActivity(Intent.createChooser(send, "Compartir texto"))
                         }
                     },
                     enabled = input.isNotBlank(),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Compartir" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Compartir texto" }
                 ) { Text("Compartir") }
                 Button(
                     onClick = { auth.saveNote(input); haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress) },
                     enabled = input.isNotBlank(),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Guardar nota" }
+                    modifier = Modifier.weight(1f).a11yButton().semantics { contentDescription = "Guardar nota" }
                 ) { Text("Guardar") }
             }
 
@@ -306,8 +281,8 @@ fun AssistScreen(onBack: () -> Unit, onOpenSettings: () -> Unit, auth: AuthViewM
                 itemsIndexed(auth.notes) { index, note ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         Text(note, modifier = Modifier.weight(1f))
-                        Button(onClick = { tts.speak(note, TextToSpeech.QUEUE_FLUSH, null, "n_$index") }) { Text("Leer") }
-                        Button(onClick = { auth.deleteNote(index) }) { Text("Eliminar") }
+                        Button(onClick = { tts.speak(note, TextToSpeech.QUEUE_FLUSH, null, "n_$index") }, modifier = Modifier.a11yButton()) { Text("Leer") }
+                        Button(onClick = { auth.deleteNote(index) }, modifier = Modifier.a11yButton()) { Text("Eliminar") }
                     }
                 }
             }

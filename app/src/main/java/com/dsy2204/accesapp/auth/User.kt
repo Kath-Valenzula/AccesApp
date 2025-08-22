@@ -4,7 +4,6 @@ data class User(
     val name: String,
     val email: String,
     val password: String,
-    val role: String,
-    val language: String,
-    val acceptedTerms: Boolean
+    val role: String = "Usuario",
+    val language: String = "Español"
 )
