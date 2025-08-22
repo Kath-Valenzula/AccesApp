@@ -5,4 +5,5 @@ import androidx.lifecycle.ViewModel
 
 class UiSettingsViewModel : ViewModel() {
     val highContrast = mutableStateOf(false)
+    val kidsMode = mutableStateOf(false)
 }
